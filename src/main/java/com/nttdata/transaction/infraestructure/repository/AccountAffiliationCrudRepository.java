@@ -4,124 +4,213 @@ import com.nttdata.transaction.application.AccountAffiliationRepository;
 import com.nttdata.transaction.domain.AccountAffiliation;
 import com.nttdata.transaction.domain.bean.Account;
 import com.nttdata.transaction.domain.bean.Customer;
-import com.nttdata.transaction.infraestructure.client.CustomerClient;
-import com.nttdata.transaction.infraestructure.client.ProductAccountClient;
+import com.nttdata.transaction.infraestructure.client.UriService;
 import com.nttdata.transaction.infraestructure.model.dao.AccountAffiliationDao;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.BeanUtils;
+import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 /**
- * ACCOUNTAFFILIATIONCRUDREPOSITORY: Implementa las operaciones (CRUD) de la afiliación de cuentas bancarias
+ * ACCOUNTAFFILIATIONCRUDREPOSITORY.
+ * Implementa las operaciones (CRUD) de la afiliación de cuentas bancarias
  */
 @Component
 @Slf4j
-public class AccountAffiliationCrudRepository implements AccountAffiliationRepository {
-    @Autowired
-    IAccountAffiliationCrudRepository repository;
+public class AccountAffiliationCrudRepository
+        implements AccountAffiliationRepository {
+    /**
+     * Operaciones de afiliación de cuentas bancarias.
+     */
+    private final IAccountAffiliationCrudRepository repository;
+    /**
+     * Servicio web cliente.
+     */
+    private final WebClient webClient;
+    /**
+     * Circuit Breaker.
+     */
+    private final ReactiveCircuitBreaker reactiveCircuitBreaker;
 
-    @Autowired
-    CustomerClient customerClient;
-
-    @Autowired
-    ProductAccountClient productClient;
-    /*
-    create: Regitra las afiliaciones de cuentas bancarias de un cliente
+    /**
+     * Constructor.
+     * @param circuitBreakerFactory
+     * @param iAccountAffiliationCrudRepository
+     */
+    public AccountAffiliationCrudRepository(
+            final ReactiveResilience4JCircuitBreakerFactory
+                    circuitBreakerFactory,
+            final IAccountAffiliationCrudRepository
+                    iAccountAffiliationCrudRepository) {
+        this.repository = iAccountAffiliationCrudRepository;
+        this.webClient = WebClient.builder()
+                .baseUrl(UriService.BASE_URI)
+                .build();
+        this.reactiveCircuitBreaker = circuitBreakerFactory.create("account");
+    }
+    /**
+     * Regitra las afiliaciones de cuentas bancarias de un cliente.
+     * @param accountAffiliation
+     * @return Mono<AccountAffiliation>
      */
     @Override
-    public Mono<AccountAffiliation> create(AccountAffiliation accountAffiliation) {
-        return repository.save(mapAccountAffiliationToAccountAffiliationDao(accountAffiliation))
+    public Mono<AccountAffiliation> create(
+            final AccountAffiliation accountAffiliation) {
+        return repository
+                .save(
+                        mapAccountAffiliationToAccountAffiliationDao(
+                                accountAffiliation
+                        )
+                )
                 .map(this::mapAccountAffiliationDaoToAccountAffiliation);
     }
-    /*
-    update: Actualiza las afiliaciones de cuentas bancarias de un cliente
+    /**
+     * Actualiza las afiliaciones de cuentas bancarias de un cliente.
+     * @param id
+     * @param accountAffiliation
+     * @return Mono<AccountAffiliation>
      */
     @Override
-    public Mono<AccountAffiliation> update(String id, AccountAffiliation accountAffiliation) {
-        return repository.findById(id)
-                .flatMap( p ->create(mapAccountAffiliationDaoToAccountAffiliation(p,accountAffiliation)));
+    public Mono<AccountAffiliation> update(
+            final String id,
+            final AccountAffiliation accountAffiliation) {
+        return repository
+                .findById(id)
+                .flatMap(p ->
+                        create(
+                                mapAccountAffiliationDaoToAccountAffiliation(
+                                        p, accountAffiliation)
+                        )
+                );
     }
-    /*
-    delete: Elimina los datos de la afiliacion de cuentas bancarias de un cliente
+    /**
+     * Elimina los datos de la afiliacion de cuentas bancarias de un cliente.
+     * @param id
+     * @return Mono<AccountAffiliationDao>
      */
     @Override
-    public Mono<AccountAffiliationDao> delete(String id) {
+    public Mono<AccountAffiliationDao> delete(final String id) {
         return repository.findById(id)
                 .flatMap(p -> repository.deleteById(p.getId()).thenReturn(p));
     }
-    /*
-    findById: Busca por el Id los datos de la afiliacion de cuentas bancarias de un cliente
+    /**
+     * Busca por Id los datos de la afiliacion de cuentas bancarias.
+     * @param id
+     * @return Mono<AccountAffiliation>
      */
     @Override
-    public Mono<AccountAffiliation> findById(String id) {
-        return repository.findById( (id))
-                .map( this::mapAccountAffiliationDaoToAccountAffiliation);
+    public Mono<AccountAffiliation> findById(final String id) {
+        return repository.findById((id))
+                .map(this::mapAccountAffiliationDaoToAccountAffiliation);
     }
-    /*
-    findAll: Busca  los datos de todas las afiliaciones de cuentas bancarias de un cliente
+    /**
+     * Busca todas las afiliaciones de cuentas bancarias de un cliente.
+     * @return Flux<AccountAffiliation>
      */
     @Override
     public Flux<AccountAffiliation> findAll() {
         return repository.findAll()
                 .map(this::mapAccountAffiliationDaoToAccountAffiliation);
     }
-    /*
-    mapAccountAffiliationToAccountAffiliationDao: Crea un clase AccountAffiliation y
-                                                  asigna los datos de AccountAffiliationDao
+    /**
+     * Crea AccountAffiliation y asigna los datos de AccountAffiliationDao.
+     * @param accountAffiliation
+     * @return AccountAffiliationDao
      */
-    private AccountAffiliationDao mapAccountAffiliationToAccountAffiliationDao(AccountAffiliation accountAffiliation){
-        AccountAffiliationDao accountAffiliationDao = new AccountAffiliationDao();
-        accountAffiliationDao.setAccount(accountAffiliation.getAccount());
-        accountAffiliationDao.setBalance(accountAffiliation.getBalance());
-        accountAffiliationDao.setBaseAmount(accountAffiliation.getBaseAmount());
-        accountAffiliationDao.setCustomer(accountAffiliation.getCustomer());
-        accountAffiliationDao.setId(accountAffiliation.getId());
-        accountAffiliationDao.setStatus(accountAffiliation.getStatus());
-        accountAffiliationDao.setNumber(accountAffiliation.getNumber());
-        accountAffiliationDao.setMovementDay(accountAffiliation.getMovementDay());
-        accountAffiliationDao.setNumberOfHolder(accountAffiliation.getNumberOfHolder());
-        accountAffiliationDao.setNumberOfSigner(accountAffiliation.getNumberOfSigner());
-        accountAffiliationDao.setIdAccount(accountAffiliation.getIdAccount());
-        accountAffiliationDao.setIdCustomer(accountAffiliation.getIdCustomer());
+    private AccountAffiliationDao mapAccountAffiliationToAccountAffiliationDao(
+            final AccountAffiliation accountAffiliation) {
+        AccountAffiliationDao accountAffiliationDao
+                = new AccountAffiliationDao();
+        BeanUtils.copyProperties(accountAffiliation, accountAffiliationDao);
         return accountAffiliationDao;
     }
-    /*
-    mapAccountAffiliationDaoToAccountAffiliation: Crea un clase AccountAffiliation y
-                                                  asigna los datos de AccountAffiliationDao
+    /**
+     * Crea AccountAffiliation y asigna los datos de AccountAffiliationDao.
+     * @param accountAffiliationDao
+     * @return AccountAffiliation
      */
-    private AccountAffiliation mapAccountAffiliationDaoToAccountAffiliation(AccountAffiliationDao accountAffiliationDao){
+    private AccountAffiliation mapAccountAffiliationDaoToAccountAffiliation(
+            final AccountAffiliationDao accountAffiliationDao) {
         log.info("[mapAccountAffiliationDaoToAccountAffiliation] Inicio");
-        log.info("[--] IdCustomer:"+accountAffiliationDao.getIdCustomer());
-        log.info("[--] IdAccount:"+accountAffiliationDao.getIdAccount());
         AccountAffiliation accountAffiliation = new AccountAffiliation();
-        Mono<Customer> s = customerClient.getById(accountAffiliationDao.getIdCustomer());
-        log.info("[--] s:"+s.block());
-        accountAffiliation.setCustomer(s.block());
-        Mono<Account> c = productClient.getById(accountAffiliationDao.getIdAccount());
-        log.info("[--] c:"+c);
-        accountAffiliation.setAccount(c.block());
-        accountAffiliation.setAccount(accountAffiliationDao.getAccount());
-        accountAffiliation.setBalance(accountAffiliationDao.getBalance());
-        accountAffiliation.setBaseAmount(accountAffiliationDao.getBaseAmount());
-        accountAffiliation.setId(accountAffiliationDao.getId());
-        accountAffiliation.setStatus(accountAffiliationDao.getStatus());
-        accountAffiliation.setNumber(accountAffiliationDao.getNumber());
-        accountAffiliation.setMovementDay(accountAffiliationDao.getMovementDay());
-        accountAffiliation.setNumberOfHolder(accountAffiliationDao.getNumberOfHolder());
-        accountAffiliation.setNumberOfSigner(accountAffiliationDao.getNumberOfSigner());
-        accountAffiliation.setIdAccount(accountAffiliationDao.getIdAccount());
-        accountAffiliation.setIdCustomer(accountAffiliationDao.getIdCustomer());
+        BeanUtils.copyProperties(accountAffiliationDao, accountAffiliation);
+        //Complementamos los datos faltantes
+        Flux<Customer> customers = getCustomerById(accountAffiliationDao);
+        accountAffiliation.setCustomer(customers.blockFirst());
+        Flux<Account> accounts = getProductAccountById(accountAffiliationDao);
+        accountAffiliation.setAccount(accounts.blockFirst());
         log.info("[mapAccountAffiliationDaoToAccountAffiliation] Fin");
         return accountAffiliation;
     }
-
-    /*
-   mapAccountAffiliationDaoToAccountAffiliation: Asigna el Id de AccountAffiliationDao a AccountAffiliation
-   */
-    private AccountAffiliation mapAccountAffiliationDaoToAccountAffiliation (AccountAffiliationDao accountAffiliationDao,  AccountAffiliation accountAffiliation){
+    /**
+     * Asigna el Id de AccountAffiliationDao a AccountAffiliation.
+     * @param accountAffiliationDao
+     * @param accountAffiliation
+     * @return AccountAffiliation
+     */
+    private AccountAffiliation mapAccountAffiliationDaoToAccountAffiliation(
+            final AccountAffiliationDao accountAffiliationDao,
+            final AccountAffiliation accountAffiliation) {
         accountAffiliation.setId(accountAffiliationDao.getId());
         return accountAffiliation;
+    }
+    /**
+     * Obtenemos los datos del cliente.
+     * @param accountAffiliationDao
+     * @return Flux<Customer>
+     */
+    public Flux<Customer> getCustomerById(
+            final AccountAffiliationDao accountAffiliationDao) {
+        log.info("[getCustomerById] Inicio");
+        return reactiveCircuitBreaker
+                .run(
+                        webClient
+                                .get()
+                                .uri(
+                                        UriService.CUSTOMER_GET_BY_ID,
+                                        accountAffiliationDao.getIdCustomer()
+                                )
+                                .accept(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .bodyToFlux(Customer.class),
+                throwable -> {
+                    log.info("throwable => {}", throwable.toString());
+                    log.info("[getCustomerById] Error en la llamada:"
+                            + UriService.CUSTOMER_GET_BY_ID
+                            + accountAffiliationDao.getIdCustomer());
+                    return Flux.just(new Customer());
+                });
+    }
+    /**
+     * Obtenemos los datos del producto: Cuenta Bancaria.
+     * @param accountAffiliationDao
+     * @return Flux<Account>
+     */
+    public Flux<Account> getProductAccountById(
+            final AccountAffiliationDao accountAffiliationDao) {
+        log.info("[getProductAccountById] Inicio");
+        return reactiveCircuitBreaker
+                .run(
+                        webClient
+                                .get()
+                                .uri(
+                                        UriService.PRODUCT_ACCOUNT_GET_BY_ID,
+                                        accountAffiliationDao.getIdAccount()
+                                )
+                                .accept(MediaType.APPLICATION_JSON)
+                                .retrieve()
+                                .bodyToFlux(Account.class),
+                throwable -> {
+                    log.info("throwable => {}", throwable.toString());
+                    log.info("[getProductAccountById] Error en la llamada:"
+                            + UriService.PRODUCT_ACCOUNT_GET_BY_ID
+                            + accountAffiliationDao.getIdAccount());
+                    return Flux.just(new Account());
+                });
     }
 }

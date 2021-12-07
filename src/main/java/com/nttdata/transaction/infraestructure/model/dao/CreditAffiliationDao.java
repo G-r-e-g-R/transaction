@@ -8,21 +8,54 @@ import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * CREDITAFFILIATIONDAO: Contiene los atributos del documento Afiliación de Creditos
+ * CREDITAFFILIATIONDAO.
+ * Contiene los atributos del documento Afiliación de Creditos
  *                        (creditAffiliation) para la persistencia
  */
 @Data
 @Document("creditAffiliation")
 public class CreditAffiliationDao {
+    /**
+     * Codigo de la Afiliación de Crédito.
+     */
     @Id
     private String id;
-    private String idCustomer;              // Identificador del cliente
-    private String idCredit;                // Identificador de la cuenta bancaria
+    /**
+     * Identificador del cliente.
+     */
+    private String idCustomer;
+    /**
+     * Identificador de la cuenta bancaria.
+     */
+    private String idCredit;
+    /**
+     * Datos del cliente.
+     */
     @Transient
-    private Customer customer;              // Datos del cliente
+    private Customer customer;
+    /**
+     * Datos del credito.
+     */
     @Transient
-    private Credit credit;                  // Datos del credito
-    private Double baseAmount;              // Monto Base al momento del registro del Credito
-    private Double balance;                 // Saldo disponible
-    private Double creditLimit;             // Limite de Credito
+    private Credit credit;
+    /**
+     * Numero del prestamo.
+     */
+    private String loanNumber;
+    /**
+     * Numero de Tarjeta de credito.
+     */
+    private String cardNumber;
+    /**
+     * Monto Base al momento del registro del Credito.
+     */
+    private Double baseAmount;
+    /**
+     * Saldo disponible.
+     */
+    private Double balance;
+    /**
+     * Limite de Credito.
+     */
+    private Double creditLimit;
 }
