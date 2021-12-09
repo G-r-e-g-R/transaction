@@ -2,9 +2,10 @@ package com.nttdata.transaction.infraestructure.rest;
 
 import com.nttdata.transaction.application.CreditAffiliationOperations;
 import com.nttdata.transaction.domain.CreditAffiliation;
-import com.nttdata.transaction.infraestructure.model.dao.CreditAffiliationDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,51 +36,72 @@ public class CreditAffiliationController {
      * @return Flux<CreditAffiliation>
      */
     @GetMapping
-    public Flux<CreditAffiliation> getAll() {
-        return creditAffiliationOperations.findAll();
+    public Mono<ResponseEntity<Flux<CreditAffiliation>>> getAll() {
+        return Mono.just(
+                ResponseEntity
+                        .ok()
+                        .body(creditAffiliationOperations.findAll()));
     }
 
     /**
      * Busca por el Id los datos de la afiliacion de credito de un cliente.
-     * @param id
+     * @param id codigo.
      * @return Mono<CreditAffiliation>
      */
     @GetMapping("/{id}")
-    public Mono<CreditAffiliation> getById(@PathVariable final String id) {
-        return creditAffiliationOperations.findById(id);
+    public Mono<ResponseEntity<CreditAffiliation>> getById(@PathVariable final String id) {
+        return creditAffiliationOperations.findById(id)
+                .map(a -> ResponseEntity
+                        .ok()
+                        .body(a))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     /**
      *  Regitra las afiliaciones de credito de un cliente.
-     * @param credittAffiliation
+     * @param credittAffiliation afiliación de credito.
      * @return Mono<CreditAffiliation>
      */
     @PostMapping
-    public Mono<CreditAffiliation> post(
+    public Mono<ResponseEntity<CreditAffiliation>> post(
             @RequestBody final CreditAffiliation credittAffiliation) {
-        return creditAffiliationOperations.create(credittAffiliation);
+        return creditAffiliationOperations.create(credittAffiliation)
+                .map(a -> ResponseEntity
+                        .ok()
+                        .body(a))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     /**
      * Actualiza las afiliaciones de credito de un cliente.
-     * @param id
-     * @param credittAffiliation
+     * @param id codigo.
+     * @param credittAffiliation afiliación de credito.
      * @return Mono<CreditAffiliation>
      */
     @PutMapping("/{id}")
-    public Mono<CreditAffiliation> put(
+    public Mono<ResponseEntity<CreditAffiliation>> put(
             @PathVariable final String id,
             @RequestBody final CreditAffiliation credittAffiliation) {
-        return creditAffiliationOperations.update(id, credittAffiliation);
+        return creditAffiliationOperations.update(id, credittAffiliation)
+                .map(a -> ResponseEntity
+                        .ok()
+                        .body(a))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     /**
      * Elimina los datos de la afiliacion de Credito de un cliente.
-     * @param id
+     * @param id codigo.
      * @return Mono<CreditAffiliationDao>
      */
     @DeleteMapping("/{id}")
-    public  Mono<CreditAffiliationDao> delete(@PathVariable final String id) {
-        return creditAffiliationOperations.delete(id);
+    public  Mono<ResponseEntity<Void>> delete(@PathVariable final String id) {
+        return creditAffiliationOperations.delete(id)
+                .map(c -> ResponseEntity
+                        .noContent()
+                        .<Void>build())
+                .defaultIfEmpty(ResponseEntity
+                        .notFound()
+                        .build());
     }
 }

@@ -2,17 +2,11 @@ package com.nttdata.transaction.infraestructure.rest;
 
 import com.nttdata.transaction.application.AccountAffiliationOperations;
 import com.nttdata.transaction.domain.AccountAffiliation;
-import com.nttdata.transaction.infraestructure.model.dao.AccountAffiliationDao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -35,51 +29,76 @@ public class AccountAffiliationController {
      * @return Flux<AccountAffiliation>
      */
     @GetMapping
-    public Flux<AccountAffiliation> getAll() {
-        return accountAffiliationOperations.findAll();
+    public Mono<ResponseEntity<Flux<AccountAffiliation>>> getAll() {
+        return Mono.just(
+                ResponseEntity
+                        .status(HttpStatus.OK)
+                        .body(accountAffiliationOperations.findAll())
+        );
     }
 
     /**
      * Busca por Id los datos de la afiliacion de cuentas bancarias.
-     * @param id
+     * @param id codigo.
      * @return Mono<AccountAffiliation>
      */
     @GetMapping("/{id}")
-    public Mono<AccountAffiliation> getById(@PathVariable final String id) {
-        return accountAffiliationOperations.findById(id);
+    public Mono<ResponseEntity<AccountAffiliation>> getById(
+            @PathVariable final String id) {
+        return accountAffiliationOperations.findById(id)
+                .map(a -> ResponseEntity
+                        .ok()
+                        .body(a))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     /**
      * Regitra las afiliaciones de cuentas bancarias de un cliente.
-     * @param accountAffiliation
+     * @param accountAffiliation afiliación de cuenta.
      * @return Mono<AccountAffiliation>
      */
     @PostMapping
-    public Mono<AccountAffiliation> post(
+    public Mono<ResponseEntity<AccountAffiliation>> post(
             @RequestBody final AccountAffiliation accountAffiliation) {
-        return accountAffiliationOperations.create(accountAffiliation);
+        return accountAffiliationOperations.create(accountAffiliation)
+                .filter(accountAffiliationResponse -> accountAffiliationResponse.getId() != null)
+                .map(accountAffiliationResponse ->ResponseEntity
+                        .ok()
+                        .body(accountAffiliationResponse)
+                )
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.BAD_REQUEST));
     }
 
     /**
      * Actualiza las afiliaciones de cuentas bancarias de un cliente.
-     * @param id
-     * @param accountAffiliation
+     * @param id codigo.
+     * @param accountAffiliation afiliación de cuenta.
      * @return Mono<AccountAffiliation>
      */
     @PutMapping("/{id}")
-    public Mono<AccountAffiliation> put(
+    public Mono<ResponseEntity<AccountAffiliation>> put(
             @PathVariable final String id,
             @RequestBody final AccountAffiliation accountAffiliation) {
-        return accountAffiliationOperations.update(id, accountAffiliation);
+        return accountAffiliationOperations.update(id, accountAffiliation)
+                .map(a -> ResponseEntity
+                        .ok()
+                        .body(a))
+                .defaultIfEmpty(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     /**
      * Elimina los datos de la afiliacion de cuentas bancarias de un cliente.
-     * @param id
+     * @param id codigo.
      * @return Mono<AccountAffiliationDao>
      */
     @DeleteMapping("/{id}")
-    public  Mono<AccountAffiliationDao> delete(@PathVariable final String id) {
-        return accountAffiliationOperations.delete(id);
+    public  Mono<ResponseEntity<Void>> delete(@PathVariable final String id) {
+        return accountAffiliationOperations.delete(id)
+                .map(c -> ResponseEntity
+                        .noContent()
+                        .<Void>build())
+                .defaultIfEmpty(ResponseEntity
+                        .notFound()
+                        .build());
     }
 }

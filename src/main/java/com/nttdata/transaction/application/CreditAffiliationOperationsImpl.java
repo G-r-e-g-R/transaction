@@ -1,7 +1,6 @@
 package com.nttdata.transaction.application;
 
 import com.nttdata.transaction.domain.CreditAffiliation;
-import com.nttdata.transaction.infraestructure.model.dao.CreditAffiliationDao;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,7 +19,7 @@ public class CreditAffiliationOperationsImpl
 
     /**
      * Constructor.
-     * @param repository
+     * @param repository repositorio.
      */
     public CreditAffiliationOperationsImpl(
             final CreditAffiliationRepository repository) {
@@ -29,7 +28,7 @@ public class CreditAffiliationOperationsImpl
 
     /**
      * Creación de credito para un cliente.
-     * @param creditAffiliation
+     * @param creditAffiliation afiliación de credito.
      * @return Mono<CreditAffiliation>
      */
     @Override
@@ -40,8 +39,8 @@ public class CreditAffiliationOperationsImpl
 
     /**
      * Actualización de un credito para un cliente.
-     * @param id
-     * @param creditAffiliation
+     * @param id codigo.
+     * @param creditAffiliation afiliación de credito.
      * @return Mono<CreditAffiliation>
      */
     @Override
@@ -52,17 +51,17 @@ public class CreditAffiliationOperationsImpl
 
     /**
      * Eliminación de un credito para un cliente.
-     * @param id
+     * @param id codigo.
      * @return Mono<CreditAffiliationDao>
      */
     @Override
-    public Mono<CreditAffiliationDao> delete(final String id) {
+    public Mono<Void> delete(final String id) {
         return creditAffiliationRepository.delete(id);
     }
 
     /**
      * Busqueda de un credito de un cliente por Id.
-     * @param id
+     * @param id codigo.
      * @return Mono<CreditAffiliation>
      */
     @Override

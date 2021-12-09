@@ -3,7 +3,9 @@ package com.nttdata.transaction.infraestructure.repository;
 import com.nttdata.transaction.application.AccountAffiliationRepository;
 import com.nttdata.transaction.domain.AccountAffiliation;
 import com.nttdata.transaction.domain.bean.Account;
+import com.nttdata.transaction.domain.bean.AccountType;
 import com.nttdata.transaction.domain.bean.Customer;
+import com.nttdata.transaction.domain.bean.CustomerType;
 import com.nttdata.transaction.infraestructure.client.UriService;
 import com.nttdata.transaction.infraestructure.model.dao.AccountAffiliationDao;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +41,8 @@ public class AccountAffiliationCrudRepository
 
     /**
      * Constructor.
-     * @param circuitBreakerFactory
-     * @param iAccountAffiliationCrudRepository
+     * @param circuitBreakerFactory corto circuito.
+     * @param iAccountAffiliationCrudRepository respositorio.
      */
     public AccountAffiliationCrudRepository(
             final ReactiveResilience4JCircuitBreakerFactory
@@ -55,12 +57,80 @@ public class AccountAffiliationCrudRepository
     }
     /**
      * Regitra las afiliaciones de cuentas bancarias de un cliente.
-     * @param accountAffiliation
+     * @param accountAffiliation afiliación de cuenta.
      * @return Mono<AccountAffiliation>
      */
     @Override
     public Mono<AccountAffiliation> create(
             final AccountAffiliation accountAffiliation) {
+        log.info("[create] Inicio");
+        Flux<Customer> newCustomer = getCustomerById(accountAffiliation.getIdCustomer());
+        Flux<Account>  newAccount = getProductAccountById(accountAffiliation.getIdAccount());
+        return newCustomer.flatMap(
+                a -> {
+                    if (a.getCustomerType().name().equals(CustomerType.EMPRESARIAL.name())){
+                        return createEnterprise(accountAffiliation,newAccount);
+                    }else if (a.getCustomerType().name().equals(CustomerType.PERSONAL.name())){
+                        return createPersonal(accountAffiliation,newAccount);
+                    }else {
+                        return Mono.just(new AccountAffiliation());
+                    }
+                }
+        ).next();
+
+    }
+
+    /**
+     * Afiliación de un cliente empresarial.
+     * @param accountAffiliation datos de afiliacion.
+     * @param newAccount cuenta bancaria.
+     * @return Mono<AccountAffiliation>
+     */
+    private Mono<AccountAffiliation> createEnterprise(
+            final AccountAffiliation accountAffiliation,
+            Flux<Account>  newAccount
+            ){
+        return newAccount.flatMap(
+                a -> {
+                    if (a.getAccountType().name()
+                            .equals(AccountType.CUENTA_CORRIENTE.name())){
+                        return repositoryCreate(accountAffiliation);
+                    }else{
+                        return Mono.just(new AccountAffiliation());
+                    }
+                }
+        ).next();
+
+    }
+    /**
+     * Afiliación de un cliente Personal.
+     * @param accountAffiliation datos de afiliacion.
+     * @param newAccount cuenta bancaria.
+     * @return Mono<AccountAffiliation>
+     */
+    private Mono<AccountAffiliation> createPersonal(
+            final AccountAffiliation accountAffiliation,
+            final Flux<Account>  newAccount){
+        return repository.findByIdCustomer(accountAffiliation.getIdCustomer())
+                .filter(customer -> {
+                    log.info("[createPersonal] Cliente Existe validamos el Producto...");
+                    return getProductAccountById(customer.getIdAccount())
+                            .blockFirst().getAccountType().name()
+                            .equals(newAccount.blockFirst().getAccountType().name());
+
+                })
+                .map( __ -> new AccountAffiliation())
+                .switchIfEmpty(Mono.defer(() -> repositoryCreate(accountAffiliation)))
+                .next();
+    }
+
+    /**
+     * Llamado al repositorio para la creación de la afiliación de cuenta bancaria.
+     * @param accountAffiliation
+     * @return
+     */
+    private Mono<AccountAffiliation> repositoryCreate(final AccountAffiliation accountAffiliation) {
+        log.info("[repositoryCreate] Creando una a");
         return repository
                 .save(
                         mapAccountAffiliationToAccountAffiliationDao(
@@ -71,8 +141,8 @@ public class AccountAffiliationCrudRepository
     }
     /**
      * Actualiza las afiliaciones de cuentas bancarias de un cliente.
-     * @param id
-     * @param accountAffiliation
+     * @param id codigo.
+     * @param accountAffiliation afiliación de cuenta.
      * @return Mono<AccountAffiliation>
      */
     @Override
@@ -94,13 +164,13 @@ public class AccountAffiliationCrudRepository
      * @return Mono<AccountAffiliationDao>
      */
     @Override
-    public Mono<AccountAffiliationDao> delete(final String id) {
+    public Mono<Void> delete(final String id) {
         return repository.findById(id)
-                .flatMap(p -> repository.deleteById(p.getId()).thenReturn(p));
+                .flatMap(p -> repository.deleteById(p.getId()));
     }
     /**
      * Busca por Id los datos de la afiliacion de cuentas bancarias.
-     * @param id
+     * @param id codigo.
      * @return Mono<AccountAffiliation>
      */
     @Override
@@ -119,7 +189,7 @@ public class AccountAffiliationCrudRepository
     }
     /**
      * Crea AccountAffiliation y asigna los datos de AccountAffiliationDao.
-     * @param accountAffiliation
+     * @param accountAffiliation afiliación de cuenta.
      * @return AccountAffiliationDao
      */
     private AccountAffiliationDao mapAccountAffiliationToAccountAffiliationDao(
@@ -131,7 +201,7 @@ public class AccountAffiliationCrudRepository
     }
     /**
      * Crea AccountAffiliation y asigna los datos de AccountAffiliationDao.
-     * @param accountAffiliationDao
+     * @param accountAffiliationDao afiliación de cuenta.
      * @return AccountAffiliation
      */
     private AccountAffiliation mapAccountAffiliationDaoToAccountAffiliation(
@@ -140,17 +210,17 @@ public class AccountAffiliationCrudRepository
         AccountAffiliation accountAffiliation = new AccountAffiliation();
         BeanUtils.copyProperties(accountAffiliationDao, accountAffiliation);
         //Complementamos los datos faltantes
-        Flux<Customer> customers = getCustomerById(accountAffiliationDao);
+        Flux<Customer> customers = getCustomerById(accountAffiliationDao.getIdCustomer());
         accountAffiliation.setCustomer(customers.blockFirst());
-        Flux<Account> accounts = getProductAccountById(accountAffiliationDao);
+        Flux<Account> accounts = getProductAccountById(accountAffiliationDao.getIdAccount());
         accountAffiliation.setAccount(accounts.blockFirst());
         log.info("[mapAccountAffiliationDaoToAccountAffiliation] Fin");
         return accountAffiliation;
     }
     /**
      * Asigna el Id de AccountAffiliationDao a AccountAffiliation.
-     * @param accountAffiliationDao
-     * @param accountAffiliation
+     * @param accountAffiliationDao afiliación de cuenta Dao.
+     * @param accountAffiliation afiliación de cuenta.
      * @return AccountAffiliation
      */
     private AccountAffiliation mapAccountAffiliationDaoToAccountAffiliation(
@@ -161,11 +231,11 @@ public class AccountAffiliationCrudRepository
     }
     /**
      * Obtenemos los datos del cliente.
-     * @param accountAffiliationDao
+     * @param idCustomer Codigo del cliente.
      * @return Flux<Customer>
      */
     public Flux<Customer> getCustomerById(
-            final AccountAffiliationDao accountAffiliationDao) {
+            final String idCustomer) {
         log.info("[getCustomerById] Inicio");
         return reactiveCircuitBreaker
                 .run(
@@ -173,7 +243,7 @@ public class AccountAffiliationCrudRepository
                                 .get()
                                 .uri(
                                         UriService.CUSTOMER_GET_BY_ID,
-                                        accountAffiliationDao.getIdCustomer()
+                                        idCustomer
                                 )
                                 .accept(MediaType.APPLICATION_JSON)
                                 .retrieve()
@@ -182,17 +252,17 @@ public class AccountAffiliationCrudRepository
                     log.info("throwable => {}", throwable.toString());
                     log.info("[getCustomerById] Error en la llamada:"
                             + UriService.CUSTOMER_GET_BY_ID
-                            + accountAffiliationDao.getIdCustomer());
+                            + idCustomer);
                     return Flux.just(new Customer());
                 });
     }
     /**
      * Obtenemos los datos del producto: Cuenta Bancaria.
-     * @param accountAffiliationDao
+     * @param idAccount codigo de la cuenta bancaria
      * @return Flux<Account>
      */
     public Flux<Account> getProductAccountById(
-            final AccountAffiliationDao accountAffiliationDao) {
+            final String idAccount) {
         log.info("[getProductAccountById] Inicio");
         return reactiveCircuitBreaker
                 .run(
@@ -200,7 +270,7 @@ public class AccountAffiliationCrudRepository
                                 .get()
                                 .uri(
                                         UriService.PRODUCT_ACCOUNT_GET_BY_ID,
-                                        accountAffiliationDao.getIdAccount()
+                                        idAccount
                                 )
                                 .accept(MediaType.APPLICATION_JSON)
                                 .retrieve()
@@ -209,7 +279,7 @@ public class AccountAffiliationCrudRepository
                     log.info("throwable => {}", throwable.toString());
                     log.info("[getProductAccountById] Error en la llamada:"
                             + UriService.PRODUCT_ACCOUNT_GET_BY_ID
-                            + accountAffiliationDao.getIdAccount());
+                            + idAccount);
                     return Flux.just(new Account());
                 });
     }

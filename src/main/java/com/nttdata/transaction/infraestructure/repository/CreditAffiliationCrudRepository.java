@@ -39,8 +39,8 @@ public class CreditAffiliationCrudRepository
 
     /**
      * Constructor.
-     * @param circuitBreakerFactory
-     * @param iCreditAffiliationCrudRepository
+     * @param circuitBreakerFactory corto circuito.
+     * @param iCreditAffiliationCrudRepository repositorio.
      */
     public CreditAffiliationCrudRepository(
             final ReactiveResilience4JCircuitBreakerFactory
@@ -56,7 +56,7 @@ public class CreditAffiliationCrudRepository
     }
     /**
      * Regitra las afiliaciones de credito de un cliente.
-     * @param creditAffiliation
+     * @param creditAffiliation afiliación de credito.
      * @return Mono<CreditAffiliation>
      */
     @Override
@@ -72,8 +72,8 @@ public class CreditAffiliationCrudRepository
     }
     /**
      * Actualiza las afiliaciones de credito de un cliente.
-     * @param id
-     * @param creditAffiliation
+     * @param id codigo.
+     * @param creditAffiliation afiliación de credito.
      * @return Mono<CreditAffiliation>
      */
     @Override
@@ -89,18 +89,18 @@ public class CreditAffiliationCrudRepository
     }
     /**
      * Elimina los datos de la afiliacion de Credito de un cliente.
-     * @param id
+     * @param id codigo.
      * @return Mono<CreditAffiliationDao>
      */
     @Override
-    public Mono<CreditAffiliationDao> delete(final String id) {
+    public Mono<Void> delete(final String id) {
         return repository
                 .findById(id)
-                .flatMap(p -> repository.deleteById(p.getId()).thenReturn(p));
+                .flatMap(p -> repository.deleteById(p.getId()));
     }
     /**
      * Busca por el Id los datos de la afiliacion de credito de un cliente.
-     * @param id
+     * @param id codigo.
      * @return Mono<CreditAffiliation>
      */
     @Override
@@ -125,7 +125,7 @@ public class CreditAffiliationCrudRepository
 
     /**
      * A la clase CreditAffiliation asigna los datos de CreditAffiliationDao.
-     * @param creditAffiliation
+     * @param creditAffiliation afiliación de credito.
      * @return CreditAffiliationDao
      */
     private CreditAffiliationDao mapCreditAffiliationToCreditAffiliationDao(
@@ -136,7 +136,7 @@ public class CreditAffiliationCrudRepository
     }
     /**
      * A la clase CreditAffiliation asigna los datos de CreditAffiliationDao.
-     * @param creditAffiliationDao
+     * @param creditAffiliationDao afiliación de credito.
      * @return CreditAffiliation
      */
     private CreditAffiliation mapCreditAffiliationDaoToCreditAffiliation(
@@ -153,8 +153,8 @@ public class CreditAffiliationCrudRepository
     }
     /**
      * Asigna el Id de CreditAffiliationDao a CreditAffiliation.
-     * @param creditAffiliationDao
-     * @param creditAffiliation
+     * @param creditAffiliationDao afiliación de credito Dao.
+     * @param creditAffiliation afiliación de credito.
      * @return CreditAffiliation
      */
     private CreditAffiliation mapCreditAffiliationDaoToCreditAffiliation(
@@ -165,7 +165,7 @@ public class CreditAffiliationCrudRepository
     }
     /**
      * Obtenemos los datos del cliente.
-     * @param creditAffiliationDao
+     * @param creditAffiliationDao afiliación de credito Dao.
      * @return Flux<Customer>
      */
     public   Flux<Customer> getCustomerById(
@@ -192,7 +192,7 @@ public class CreditAffiliationCrudRepository
     }
     /**
      * Obtenemos los datos del producto: Credito.
-     * @param creditAffiliationDao
+     * @param creditAffiliationDao afiliación de credito Dao.
      * @return Flux<Credit>
      */
     public   Flux<Credit> getProductCreditById(

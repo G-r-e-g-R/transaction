@@ -1,7 +1,6 @@
 package com.nttdata.transaction.application;
 
 import com.nttdata.transaction.domain.CreditAffiliation;
-import com.nttdata.transaction.infraestructure.model.dao.CreditAffiliationDao;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -13,15 +12,15 @@ import reactor.core.publisher.Mono;
 public interface CreditAffiliationOperations {
     /**
      * Creación de credito para un cliente.
-     * @param creditAffiliation
+     * @param creditAffiliation afiliación de credito.
      * @return Mono<CreditAffiliation>
      */
     Mono<CreditAffiliation> create(CreditAffiliation creditAffiliation);
 
     /**
      * Actualización de un credito para un cliente.
-     * @param id
-     * @param creditAffiliation
+     * @param id codigo.
+     * @param creditAffiliation afiliación de credito.
      * @return Mono<CreditAffiliation>
      */
     Mono<CreditAffiliation> update(String id,
@@ -29,14 +28,14 @@ public interface CreditAffiliationOperations {
 
     /**
      * Eliminación de un credito para un cliente.
-     * @param id
+     * @param id codigo.
      * @return Mono<CreditAffiliationDao>
      */
-    Mono<CreditAffiliationDao> delete(String id);
+    Mono<Void> delete(String id);
 
     /**
      * Busqueda de un credito de un cliente por Id.
-     * @param id
+     * @param id codigo.
      * @return Mono<CreditAffiliation>
      */
     Mono<CreditAffiliation> findById(String id);

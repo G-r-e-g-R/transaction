@@ -1,7 +1,9 @@
 package com.nttdata.transaction.application;
 
 import com.nttdata.transaction.domain.AccountAffiliation;
-import com.nttdata.transaction.infraestructure.model.dao.AccountAffiliationDao;
+import com.nttdata.transaction.domain.bean.Account;
+import com.nttdata.transaction.domain.bean.AccountType;
+import com.nttdata.transaction.domain.bean.Customer;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -21,7 +23,7 @@ public class AccountAffiliationOperationsImpl
 
     /**
      * Constructor.
-     * @param accountAffiliationRepository
+     * @param accountAffiliationRepository repositorio.
      */
     public AccountAffiliationOperationsImpl(
             final AccountAffiliationRepository accountAffiliationRepository) {
@@ -30,19 +32,20 @@ public class AccountAffiliationOperationsImpl
 
     /**
      * Registro (Afiliación) de un cliente con cuenta bancaria.
-     * @param accountAffiliation
+     * @param accountAffiliation afiliación de cuenta.
      * @return Mono<AccountAffiliation>
      */
     @Override
     public Mono<AccountAffiliation> create(
             final AccountAffiliation accountAffiliation) {
         return repository.create(accountAffiliation);
+
     }
 
     /**
      * Actualización de un cliente con cuenta bancaria.
-     * @param id
-     * @param accountAffiliation
+     * @param id codigo.
+     * @param accountAffiliation afiliación de cuenta.
      * @return Mono<AccountAffiliation>
      */
     @Override
@@ -53,17 +56,17 @@ public class AccountAffiliationOperationsImpl
 
     /**
      * Eliminación de un cliente con cuenta bancaria.
-     * @param id
+     * @param id codigo.
      * @return Mono<AccountAffiliationDao>
      */
     @Override
-    public Mono<AccountAffiliationDao> delete(final String id) {
+    public Mono<Void> delete(final String id) {
         return repository.delete(id);
     }
 
     /**
      * Busqueda de un cliente con cuenta bancaria por Id.
-     * @param id
+     * @param id codigo.
      * @return Mono<AccountAffiliation>
      */
     @Override
@@ -79,4 +82,5 @@ public class AccountAffiliationOperationsImpl
     public Flux<AccountAffiliation> findAll() {
         return repository.findAll();
     }
+
 }

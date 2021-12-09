@@ -1,7 +1,6 @@
 package com.nttdata.transaction.application;
 
 import com.nttdata.transaction.domain.AccountAffiliation;
-import com.nttdata.transaction.infraestructure.model.dao.AccountAffiliationDao;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 /**
@@ -12,15 +11,15 @@ import reactor.core.publisher.Mono;
 public interface AccountAffiliationRepository {
     /**
      * Registro (Afiliación) de un cliente con cuenta bancaria.
-     * @param accountAffiliation
+     * @param accountAffiliation afiliación de cuenta.
      * @return Mono<AccountAffiliation>
      */
     Mono<AccountAffiliation> create(AccountAffiliation accountAffiliation);
 
     /**
      * Actualización de un cliente con cuenta bancaria.
-     * @param id
-     * @param accountAffiliation
+     * @param id codigo.
+     * @param accountAffiliation afiliación de cuenta.
      * @return Mono<AccountAffiliation>
      */
     Mono<AccountAffiliation> update(String id,
@@ -28,14 +27,14 @@ public interface AccountAffiliationRepository {
 
     /**
      * Eliminación de un cliente con cuenta bancaria.
-     * @param id
+     * @param id codigo.
      * @return Mono<AccountAffiliationDao>
      */
-    Mono<AccountAffiliationDao> delete(String id);
+    Mono<Void> delete(String id);
 
     /**
      * Busqueda de un cliente con cuenta bancaria por Id.
-     * @param id
+     * @param id codigo.
      * @return Mono<AccountAffiliation>
      */
     Mono<AccountAffiliation> findById(String id);
@@ -45,4 +44,6 @@ public interface AccountAffiliationRepository {
      * @return Flux<AccountAffiliation>
      */
     Flux<AccountAffiliation> findAll();
+
+
 }
