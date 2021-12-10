@@ -21,9 +21,10 @@ public class CreditAffiliationOperationsImpl
      * Constructor.
      * @param repository repositorio.
      */
-    public CreditAffiliationOperationsImpl(
+    public
+    CreditAffiliationOperationsImpl(
             final CreditAffiliationRepository repository) {
-        this.creditAffiliationRepository = repository;
+      this.creditAffiliationRepository = repository;
     }
 
     /**
@@ -32,8 +33,9 @@ public class CreditAffiliationOperationsImpl
      * @return Mono<CreditAffiliation>
      */
     @Override
-    public Mono<CreditAffiliation> create(
-            final CreditAffiliation creditAffiliation) {
+    public
+    Mono<CreditAffiliation>
+    create(final CreditAffiliation creditAffiliation) {
         return creditAffiliationRepository.create(creditAffiliation);
     }
 
@@ -44,8 +46,9 @@ public class CreditAffiliationOperationsImpl
      * @return Mono<CreditAffiliation>
      */
     @Override
-    public Mono<CreditAffiliation> update(
-            final String id, final CreditAffiliation creditAffiliation) {
+    public
+    Mono<CreditAffiliation>
+    update(final String id, final CreditAffiliation creditAffiliation) {
         return creditAffiliationRepository.update(id, creditAffiliation);
     }
 
@@ -55,7 +58,9 @@ public class CreditAffiliationOperationsImpl
      * @return Mono<CreditAffiliationDao>
      */
     @Override
-    public Mono<Void> delete(final String id) {
+    public
+    Mono<Void>
+    delete(final String id) {
         return creditAffiliationRepository.delete(id);
     }
 
@@ -65,7 +70,9 @@ public class CreditAffiliationOperationsImpl
      * @return Mono<CreditAffiliation>
      */
     @Override
-    public Mono<CreditAffiliation> findById(final String id) {
+    public
+    Mono<CreditAffiliation>
+    findById(final String id) {
         return creditAffiliationRepository.findById(id);
     }
 
@@ -74,7 +81,9 @@ public class CreditAffiliationOperationsImpl
      * @return Flux<CreditAffiliation>
      */
     @Override
-    public Flux<CreditAffiliation> findAll() {
+    public
+    Flux<CreditAffiliation>
+    findAll() {
         return creditAffiliationRepository.findAll();
     }
 }

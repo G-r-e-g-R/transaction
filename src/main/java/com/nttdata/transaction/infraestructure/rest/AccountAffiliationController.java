@@ -29,7 +29,10 @@ public class AccountAffiliationController {
      * @return Flux<AccountAffiliation>
      */
     @GetMapping
-    public Mono<ResponseEntity<Flux<AccountAffiliation>>> getAll() {
+    public
+    Mono<ResponseEntity<Flux<AccountAffiliation>>>
+    getAll() {
+
         return Mono.just(
                 ResponseEntity
                         .status(HttpStatus.OK)
@@ -43,8 +46,10 @@ public class AccountAffiliationController {
      * @return Mono<AccountAffiliation>
      */
     @GetMapping("/{id}")
-    public Mono<ResponseEntity<AccountAffiliation>> getById(
-            @PathVariable final String id) {
+    public
+    Mono<ResponseEntity<AccountAffiliation>>
+    getById(@PathVariable final String id) {
+
         return accountAffiliationOperations.findById(id)
                 .map(a -> ResponseEntity
                         .ok()
@@ -58,8 +63,10 @@ public class AccountAffiliationController {
      * @return Mono<AccountAffiliation>
      */
     @PostMapping
-    public Mono<ResponseEntity<AccountAffiliation>> post(
-            @RequestBody final AccountAffiliation accountAffiliation) {
+    public
+    Mono<ResponseEntity<AccountAffiliation>>
+    post(@RequestBody final AccountAffiliation accountAffiliation) {
+
         return accountAffiliationOperations.create(accountAffiliation)
                 .filter(accountAffiliationResponse -> accountAffiliationResponse.getId() != null)
                 .map(accountAffiliationResponse ->ResponseEntity
@@ -76,9 +83,11 @@ public class AccountAffiliationController {
      * @return Mono<AccountAffiliation>
      */
     @PutMapping("/{id}")
-    public Mono<ResponseEntity<AccountAffiliation>> put(
-            @PathVariable final String id,
-            @RequestBody final AccountAffiliation accountAffiliation) {
+    public
+    Mono<ResponseEntity<AccountAffiliation>>
+    put(@PathVariable final String id,
+        @RequestBody final AccountAffiliation accountAffiliation) {
+
         return accountAffiliationOperations.update(id, accountAffiliation)
                 .map(a -> ResponseEntity
                         .ok()
@@ -92,7 +101,10 @@ public class AccountAffiliationController {
      * @return Mono<AccountAffiliationDao>
      */
     @DeleteMapping("/{id}")
-    public  Mono<ResponseEntity<Void>> delete(@PathVariable final String id) {
+    public
+    Mono<ResponseEntity<Void>>
+    delete(@PathVariable final String id) {
+
         return accountAffiliationOperations.delete(id)
                 .map(c -> ResponseEntity
                         .noContent()
