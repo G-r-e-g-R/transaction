@@ -42,21 +42,67 @@ public class CreditMovementOperationsImpl
     Mono<CreditMovement>
     create(CreditMovement creditMovement) {
         //validamos el limite de consumo
+        log.info("[create] Inicio");
         Mono<CreditAffiliation> creditAffiliation
                 = getCreditAffiliation(creditMovement.getIdCreditAffiliation());
+        log.info("[create] creditAffiliation: "+creditAffiliation);
+        creditAffiliation.subscribe(System.out::println);
+
+        return createPayments(creditMovement, creditAffiliation)
+                .switchIfEmpty(createConsumption(creditMovement, creditAffiliation));
+
+
+    }
+
+    /**
+     * Registra los pagos de credito.
+     * @param creditMovement movimiento.
+     * @param creditAffiliation afiliacion.
+     * @return  Mono<CreditMovement>
+     */
+    private
+    Mono<CreditMovement>
+    createPayments(
+            CreditMovement creditMovement,
+            Mono<CreditAffiliation> creditAffiliation) {
+        log.info("[createPayments] Inicio: "+creditMovement.getMovementType());
+        log.info("[createPayments] getIdCreditAffiliation: "+creditMovement.getIdCreditAffiliation());
         return creditAffiliation
+                .filter(a -> creditMovement.getMovementType().name().equals(CreditMovementType.PAGOS.name()))
+                .flatMap(__ -> creditMovementRepository
+                        .create(creditMovement)
+                        .map(a -> { updateCreditAffiliation(creditMovement);
+                            return a;})
+                        .switchIfEmpty(Mono.just(new CreditMovement())))
+                .switchIfEmpty(Mono.just(new CreditMovement()));
+    }
+
+    /**
+     * Registra los consumos, validando su limite de credito.
+     * @param creditMovement movimiento.
+     * @param creditAffiliation afiliacion.
+     * @return Mono<CreditMovement>.
+     */
+    private
+    Mono<CreditMovement>
+    createConsumption(
+            CreditMovement creditMovement,
+            Mono<CreditAffiliation> creditAffiliation) {
+        log.info("[createConsumption] Inicio:"+creditMovement.getMovementType());
+        log.info("[createConsumption] Amount:"+creditMovement.getAmount());
+        creditAffiliation.subscribe(System.out::println);
+        return creditAffiliation
+                .filter(a -> creditMovement.getMovementType().name().equals(CreditMovementType.CARGO.name()))
                 .filter(a ->
-                    a.getCreditLimit() > a.getBalance() + creditMovement.getAmount()
+                        a.getCreditLimit() > a.getBalance() + creditMovement.getAmount()
                 )
                 .flatMap(__ -> creditMovementRepository
                         .create(creditMovement)
                         .map(a -> { updateCreditAffiliation(creditMovement);
-                                    return a;})
+                            return a;})
                         .switchIfEmpty(Mono.just(new CreditMovement())))
                 .switchIfEmpty(Mono.just(new CreditMovement()));
-
     }
-
     /**
      * Actualiza el movimiento de credito.
      * @param id codigo.
@@ -127,7 +173,9 @@ public class CreditMovementOperationsImpl
      * @return
      */
     @Override
-    public Mono<CreditAffiliation> getCreditAffiliationById(String idAffiliation) {
+    public
+    Mono<CreditAffiliation>
+    getCreditAffiliationById(String idAffiliation) {
         log.info("[getCreditAffiliationById] idAffiliation:"+idAffiliation);
         return creditMovementRepository.getCreditAffiliationById(idAffiliation);
     }
@@ -198,6 +246,7 @@ public class CreditMovementOperationsImpl
     private
     Mono<CreditAffiliation>
     getCreditAffiliation(String idAffiliation) {
+        log.info("[getCreditAffiliation] idAffiliation:"+idAffiliation);
         return creditMovementRepository
                 .getCreditAffiliationById(
                         idAffiliation
@@ -214,10 +263,15 @@ public class CreditMovementOperationsImpl
     updateBalanceCredit(Mono<CreditAffiliation> creditAffiliation,
                          Integer operation,
                          CreditMovement creditMovement){
+        log.info("[updateBalanceCredit] inicio");
+        log.info("[updateBalanceCredit] operation:"+operation);
+        log.info("[updateBalanceCredit] creditMovement.getAmount():"+creditMovement.getAmount());
+
         creditAffiliation.map(a -> {
             a.setBalance(a.getBalance() + creditMovement.getAmount()*operation);
             return a;
-        }).map(a -> creditMovementRepository.putCreditAffiliation(a.getIdCredit(), a));
+        }).flatMap(a -> creditMovementRepository.putCreditAffiliation(creditMovement.getIdCreditAffiliation(), a))
+                .subscribe();
     }
 
     /**

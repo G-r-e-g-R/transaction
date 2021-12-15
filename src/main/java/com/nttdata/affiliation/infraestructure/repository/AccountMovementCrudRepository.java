@@ -142,21 +142,22 @@ public class AccountMovementCrudRepository
     public
     Mono<AccountAffiliation>
     putAccountAffiliation(String idAffiliation, AccountAffiliation accountAffiliation) {
-        log.info("[getAccountAffiliationById] Inicio");
+        log.info("[putAccountAffiliation] Inicio");
         return reactiveCircuitBreaker
                 .run(
                         webClient
                                 .put()
                                 .uri(
                                         UriService.AFFILIATION_ACCOUNT_PUT,
-                                        idAffiliation, accountAffiliation
+                                        idAffiliation
                                 )
+                                .bodyValue(accountAffiliation)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .retrieve()
                                 .bodyToMono(AccountAffiliation.class),
                         throwable -> {
                             log.info("throwable => {}", throwable.toString());
-                            log.info("[getAccountAffiliationById] Error en la llamada:"
+                            log.info("[putAccountAffiliation] Error en la llamada:"
                                     + UriService.AFFILIATION_ACCOUNT_PUT
                                     + idAffiliation +":" + accountAffiliation);
                             return Mono.just(new AccountAffiliation());
@@ -260,7 +261,7 @@ public class AccountMovementCrudRepository
      */
     @Override
     public Flux<AccountMovement> findByIdAffiliation(String idAffiliation) {
-        return repository.findByIdAffiliation(idAffiliation);
+        return repository.findByIdAccountAffiliation(idAffiliation);
     }
 
     /**
@@ -293,11 +294,10 @@ public class AccountMovementCrudRepository
         //Complementamos los datos faltantes
         Mono<AccountAffiliation> accountAffiliation = getAccountAffiliationById(accountMovementDao.getIdAccountAffiliation());
         Mono<Customer> customers = getCustomerById(accountAffiliation.block().getIdCustomer());
-        accountAffiliation.block().setCustomer(customers.block());
+        accountMovement.setCustomer(customers.block());
         Mono<Account> accounts = getProductAccountById(accountAffiliation.block().getIdAccount());
-        accountAffiliation.block().setAccount(accounts.block());
-        //Asignamos los datos de la afiliacion
-        accountMovement.setAccountAffiliation(accountAffiliation.block());
+        accountMovement.setAccount(accounts.block());
+
         log.info("[mapAccountMovementDaoToAccountMovement] Fin");
         return accountMovement;
     }

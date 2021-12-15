@@ -34,7 +34,7 @@ public class CustomCreditAffiliationCrudRepository
      */
 
     @Override
-    public Flux<CreditMovement> findByIdAffiliation(String idAffiliation) {
+    public Flux<CreditMovement> findByIdCreditAffiliation(String idAffiliation) {
         Query query = new Query(Criteria.where("idAccountAffiliation").is(idAffiliation));
         return mongoTemplate.find(query, CreditMovement.class);
     }

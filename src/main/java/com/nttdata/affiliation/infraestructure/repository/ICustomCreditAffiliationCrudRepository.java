@@ -15,5 +15,5 @@ public interface ICustomCreditAffiliationCrudRepository {
      * @param idAffiliation Codigo del afiliacion.
      * @return Flux<CreditMovement>
      */
-    Flux<CreditMovement> findByIdAffiliation(String idAffiliation);
+    Flux<CreditMovement> findByIdCreditAffiliation(String idAffiliation);
 }

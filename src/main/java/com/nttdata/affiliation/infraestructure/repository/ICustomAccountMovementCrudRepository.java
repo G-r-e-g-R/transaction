@@ -14,5 +14,5 @@ public interface ICustomAccountMovementCrudRepository {
      * @param idAffiliation Codigo de afiliacion.
      * @return Flux<AccountAffiliation>
      */
-    Flux<AccountMovement> findByIdAffiliation(String idAffiliation);
+    Flux<AccountMovement> findByIdAccountAffiliation(String idAffiliation);
 }

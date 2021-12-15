@@ -1,6 +1,9 @@
 package com.nttdata.affiliation.domain;
 
+import com.nttdata.affiliation.domain.bean.Account;
+import com.nttdata.affiliation.domain.bean.Credit;
 import com.nttdata.affiliation.domain.bean.CreditAffiliation;
+import com.nttdata.affiliation.domain.bean.Customer;
 import lombok.Data;
 
 import java.util.Date;
@@ -21,9 +24,13 @@ public class CreditMovement {
      */
     private String idCreditAffiliation;
     /**
-     * Datos de la afiliacion de credito.
+     * Datos del cliente.
      */
-    private CreditAffiliation creditAffiliation;
+    private Customer customer;
+    /**
+     * Datos del credito.
+     */
+    private Credit credit;
     /**
      * Tipo de movimiento - transacción.
      */

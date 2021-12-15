@@ -1,7 +1,9 @@
 package com.nttdata.affiliation.infraestructure.model.dao;
 
 import com.nttdata.affiliation.domain.AccountMovementType;
+import com.nttdata.affiliation.domain.bean.Account;
 import com.nttdata.affiliation.domain.bean.AccountAffiliation;
+import com.nttdata.affiliation.domain.bean.Customer;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
@@ -27,10 +29,15 @@ public class AccountMovementDao {
      */
     private String idAccountAffiliation;
     /**
-     * Datos de la afiliación.
+     * Datos del cliente.
      */
     @Transient
-    private AccountAffiliation accountAffiliation;
+    private Customer customer;
+    /**
+     * Datos de la cuenta bancaria.
+     */
+    @Transient
+    private Account account;
     /**
      * Monto de la transacción.
      */

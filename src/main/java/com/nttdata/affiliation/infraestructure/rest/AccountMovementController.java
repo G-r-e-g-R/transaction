@@ -16,7 +16,7 @@ import reactor.core.publisher.Mono;
  */
 @Slf4j
 @RestController
-@RequestMapping("/movements/accounts")
+@RequestMapping("/transactions/accounts")
 @RequiredArgsConstructor
 public class AccountMovementController {
     /**

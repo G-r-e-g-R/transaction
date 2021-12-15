@@ -1,6 +1,8 @@
 package com.nttdata.affiliation.domain;
 
+import com.nttdata.affiliation.domain.bean.Account;
 import com.nttdata.affiliation.domain.bean.AccountAffiliation;
+import com.nttdata.affiliation.domain.bean.Customer;
 import lombok.Data;
 
 import java.util.Date;
@@ -21,9 +23,13 @@ public class AccountMovement {
      */
     private String idAccountAffiliation;
     /**
-     * Datos de la afiliación.
+     * Datos del cliente.
      */
-    private AccountAffiliation accountAffiliation;
+    private Customer customer;
+    /**
+     * Datos de la cuenta bancaria.
+     */
+    private Account account;
     /**
      * Monto de la transacción.
      */

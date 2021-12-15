@@ -36,12 +36,12 @@ public class UriService {
      * Servicio de Afiliación: Obtiene la afiliación de cuenta bancaria.
      */
     public static  final
-    String AFFILIATION_ACCOUNT_GET_BY_ID = "/affiliations/accounts";
+    String AFFILIATION_ACCOUNT_GET_BY_ID = "/affiliations/accounts/{id}";
     /**
      * Servicio de Afiliación: Obtiene la afiliación de credito.
      */
     public static final
-    String AFFILIATION_CREDIT_GET_BY_ID = "/affiliations/credits";
+    String AFFILIATION_CREDIT_GET_BY_ID = "/affiliations/credits/{id}";
     /**
      * Servicio de Afiliacion: Actualiza la afiliación de cuenta bancaria.
      */

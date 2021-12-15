@@ -91,6 +91,7 @@ public class AccountMovementOperationsImpl
     private
     Mono<AccountAffiliation>
     getAccountAffiliation(String idAffiliation) {
+        log.info("[getAccountAffiliation] idAffiliation: "+idAffiliation);
         return repository
                 .getAccountAffiliationById(
                         idAffiliation
@@ -104,13 +105,16 @@ public class AccountMovementOperationsImpl
      */
     private
     void
-    updateBalanceAccount(Mono<AccountAffiliation> accountAffiliation,
+    updateBalanceAccount(AccountAffiliation accountAffiliation,
                          Integer operation,
                          AccountMovement accountMovement){
-        accountAffiliation.map(a -> {
-            a.setBalance(a.getBalance() + accountMovement.getAmount()*operation);
-            return a;
-        }).map(a -> repository.putAccountAffiliation(a.getIdAccount(), a));
+        log.info("[updateBalanceAccount] Inicio - operation: "+operation+ " accountMovement:"+accountMovement);
+        log.info("[updateBalanceAccount] accountAffiliation: "+accountAffiliation);
+        accountAffiliation.setBalance(
+                accountAffiliation.getBalance() + accountMovement.getAmount()*operation);
+        repository.putAccountAffiliation(accountAffiliation.getId(), accountAffiliation).subscribe();
+        log.info("[updateBalanceAccount] accountAffiliation.getBalance(): "+accountAffiliation.getBalance());
+        log.info("[updateBalanceAccount] Fin: ");
     }
 
     /**
@@ -123,10 +127,11 @@ public class AccountMovementOperationsImpl
         //Identificamos el tipo de operacion.
         final Integer operation = getOperation(accountMovement);
         //Obtenemos la afiliación
-        Mono<AccountAffiliation> accountAffiliation
-                = getAccountAffiliation(accountMovement.getIdAccountAffiliation());
-        //actualizamos la afiliación
-        updateBalanceAccount(accountAffiliation, operation, accountMovement);
+        log.info("[updateAccountAffiliation] idAffiliation:"+accountMovement.getIdAccountAffiliation());
+        getAccountAffiliation(accountMovement.getIdAccountAffiliation())
+                .flatMap(a -> {updateBalanceAccount(a, operation, accountMovement); return Mono.empty();}).subscribe();
+
+
     }
 
     /**

@@ -138,15 +138,18 @@ public class CreditMovementCrudRepository
     public
     Mono<CreditAffiliation>
     putCreditAffiliation(String idAffiliation, CreditAffiliation creditAffiliation) {
-        log.info("[getAccountAffiliationById] Inicio");
+        log.info("[putCreditAffiliation] Inicio");
+        log.info("[putCreditAffiliation] idAffiliation:"+idAffiliation);
+        log.info("[putCreditAffiliation] Balance:"+creditAffiliation.getBalance());
         return reactiveCircuitBreaker
                 .run(
                         webClient
                                 .put()
                                 .uri(
                                         UriService.AFFILIATION_CREDIT_PUT,
-                                        idAffiliation, creditAffiliation
+                                        idAffiliation
                                 )
+                                .bodyValue(creditAffiliation)
                                 .accept(MediaType.APPLICATION_JSON)
                                 .retrieve()
                                 .bodyToMono(CreditAffiliation.class),
@@ -161,30 +164,30 @@ public class CreditMovementCrudRepository
 
     /**
      * Obtenemos los datos de la afiliación de credito.
-     * @param idCustomer Codigo de la afilicacion.
+     * @param idAffiliacion Codigo de la afilicacion.
      * @return Mono<CreditAffiliation>
      */
     @Override
     public
     Mono<CreditAffiliation>
-    getCreditAffiliationById(String idCustomer) {
-        log.info("[getAccountAffiliationById] Inicio");
+    getCreditAffiliationById(String idAffiliacion) {
+        log.info("[getCreditAffiliationById] idAffiliacion:"+idAffiliacion);
         return reactiveCircuitBreaker
                 .run(
                         webClient
                                 .get()
                                 .uri(
                                         UriService.AFFILIATION_CREDIT_GET_BY_ID,
-                                        idCustomer
+                                        idAffiliacion
                                 )
                                 .accept(MediaType.APPLICATION_JSON)
                                 .retrieve()
                                 .bodyToMono(CreditAffiliation.class),
                         throwable -> {
                             log.info("throwable => {}", throwable.toString());
-                            log.info("[getAccountAffiliationById] Error en la llamada:"
+                            log.info("[getCreditAffiliationById] Error en la llamada:"
                                     + UriService.AFFILIATION_CREDIT_GET_BY_ID
-                                    + idCustomer);
+                                    + idAffiliacion);
                             return Mono.just(new CreditAffiliation());
                         });
     }
@@ -256,7 +259,7 @@ public class CreditMovementCrudRepository
      */
     @Override
     public Flux<CreditMovement> findByIdAffiliation(String idAffiliation) {
-        return repository.findByIdAffiliation(idAffiliation);
+        return repository.findByIdCreditAffiliation(idAffiliation);
     }
 
     /**
@@ -289,11 +292,10 @@ public class CreditMovementCrudRepository
         //Complementamos los datos faltantes
         Mono<CreditAffiliation> creditAffiliation = getCreditAffiliationById(creditMovementDao.getIdCreditAffiliation());
         Mono<Customer> customers = getCustomerById(creditAffiliation.block().getIdCustomer());
-        creditAffiliation.block().setCustomer(customers.block());
+        creditMovement.setCustomer(customers.block());
         Mono<Credit> credit = getProductCreditById(creditAffiliation.block().getIdCredit());
-        creditAffiliation.block().setCredit(credit.block());
-        //Asignamos los datos de la afiliacion
-        creditMovement.setCreditAffiliation(creditAffiliation.block());
+        creditMovement.setCredit(credit.block());
+
         log.info("[mapAccountMovementDaoToAccountMovement] Fin");
         return creditMovement;
     }
